@@ -8,8 +8,8 @@ public class WebParserRunner {
         JobSearchParser jobSearchParser = new JobSearchParser();
 
         try {
-            cvParser.printJobs();
-            jobSearchParser.printJobs();
+            //cvParser.getJobs();
+            jobSearchParser.getJobs();
         }
         catch (Exception e) {
             System.out.println("Error");

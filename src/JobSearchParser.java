@@ -1,6 +1,7 @@
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.*;
 import org.jsoup.select.Elements;
+import java.util.*;
 
 public class JobSearchParser extends WebParser {
 
@@ -9,35 +10,67 @@ public class JobSearchParser extends WebParser {
     }
 
     @Override
-    public void printJobs() throws Exception {
-        String jobTitle;
-        String compName;
+    /**
+     * This method returns all the jobs scraped from jobsearch.az
+     */
+    public List<Job> getJobs() throws Exception {
+        int id;
+        String jobTitle = "";
+        String compName = "";
+        String description = "";
+        String publishDate = "";
+        String jobUrl = "";
+        ArrayList<String> urlList = new ArrayList<String>();
+        ArrayList<Job> jobList = new ArrayList<Job>();
         int num = 1;
 
         System.out.println();
         try {
-            System.out.println("\n                  JOBSEARCH.AZ JOBS LIST");
             final Document doc = Jsoup.connect(url).timeout(60000).get();
-            Elements jobs = doc.select("table.hotvac").select("tr");
+            Document jobDocument;
 
-            // Foreach loop to iterate through every IT job listed to scrape necessary information
-            for (Element job : jobs ) {
-                // In this part, necessary information is parsed from a list item
-                jobTitle = job.select("a.hotv_text").text().replace("&nbsp;", " ");
-                compName = job.select("td.hotv_text").text().replace("&nbsp;", " ")
-                        .replace(jobTitle, "").replace(" new ", "");
+            if (doc == null ) {
+                return null;
+            }
+            Elements elems = doc.select("a.hotv_text");
 
-                if (jobTitle.equals("") ) {
-                    continue;
+            // Foreach loop to iterate through every IT job listed to scrape the urls
+            for (Element elem : elems ) {
+                if (elem != null) {
+                    jobUrl = elem.attr("abs:href");
+
+                    if (jobUrl.equals("") ) {
+                        continue;
+                    }
+                    urlList.add(jobUrl);
                 }
+            }
 
-                // Printing out the job details
-                System.out.println("\n-----------------------------------------------------");
+            // Now we scrape individual job details
+            Elements jobDetails;
+            for (int i = 0; i < urlList.size(); i++ ) {
+                jobUrl = urlList.get(i);
+                jobDocument = Jsoup.connect(jobUrl).timeout(60000).get();
+
+                if (jobDocument == null) {
+                    return null;
+                }
+                jobDetails = jobDocument.select("td.text");
+
+                // scraping the necessary data
+                id = Integer.parseInt(jobUrl.replaceAll("[^0-9]",""));
+                jobTitle = jobDetails.get(0).text().replace("JOB TITLE: ", "");  // 0
+                compName = jobDetails.get(1).text().replace("EMPLOYER: ", "");   // 1
+                description = jobDetails.get(6).text().replace("EMPLOYER: ", "");  // 6
+                publishDate = jobDetails.get(3).text().replace("PUBLISHED: ", "");   // 2
+
+                // Creating a job object with necessary info and adding it to the job list
+                Job job = new Job(id, jobTitle, compName, description, publishDate);
                 System.out.println(num);
-                System.out.println("Job Title: " + jobTitle);
-                System.out.println("Company Name: " + compName);
-                System.out.println("-----------------------------------------------------");
+                System.out.println(job);
+                System.out.println();
                 num++;
+                jobList.add(job);
             }
         }
 
@@ -45,5 +78,6 @@ public class JobSearchParser extends WebParser {
             System.out.println("Error occurred while connecting to jobsearch.az");
             e.printStackTrace();
         }
+        return jobList;
     }
 }

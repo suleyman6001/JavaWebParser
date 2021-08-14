@@ -1,6 +1,9 @@
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.*;
 import org.jsoup.select.Elements;
+import java.util.*;
+
+import java.util.List;
 
 public class CveeParser extends WebParser {
 
@@ -10,7 +13,11 @@ public class CveeParser extends WebParser {
     }
 
     @Override
-    public void printJobs() throws Exception {
+    /**
+     * This method returns all the jobs scraped from cv.ee/en
+     */
+    public List<Job> getJobs() throws Exception {
+        ArrayList<Job> jobList = new ArrayList<Job>();
         String jobTitle;
         String compName;
         String city;
@@ -21,9 +28,13 @@ public class CveeParser extends WebParser {
         try {
             url = url.replace("limit=20", "limit=10000");
             final Document doc = Jsoup.connect(url).timeout(60000).get();
-            Elements jobs = doc.select("ul.jsx-3347674222.jsx-4142501799.vacancies-list")
-                    .select("li.jsx-3347674222.jsx-4142501799.vacancies-list__item.false");
 
+            if (doc == null ) {
+                return null;
+            }
+
+            Elements jobs = doc.select("ul.jsx-3347674222.jsx-4142501799.vacancies-list")
+                                .select("li.jsx-3347674222.jsx-4142501799.vacancies-list__item.false");
 
             // Scraping the number of listed jobs from the website
             jobCountHeader = doc.select("span.jsx-3347674222.jsx-4142501799").text()
@@ -43,9 +54,11 @@ public class CveeParser extends WebParser {
 
                 // Printing out the job details
                 System.out.println(num);
-                System.out.println("Job Title: " + jobTitle);
+                Job curJob = new Job(5, jobTitle, compName, "desc", "publish");
+                System.out.println(curJob);
+                /*System.out.println("Job Title: " + jobTitle);
                 System.out.println("Company Name: " + compName);
-                System.out.println("City: " + city);
+                System.out.println("City: " + city);*/
                 System.out.println("-----------------------------------------------------");
                 num++;
             }
@@ -55,6 +68,7 @@ public class CveeParser extends WebParser {
             System.out.println("Error occurred while connecting to cv.ee/en");
             e.printStackTrace();
         }
+        return jobList;
     }
 }
 

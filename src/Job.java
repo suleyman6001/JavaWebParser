@@ -4,22 +4,30 @@
  */
 public class Job {
     // fields
+    private int id;
     private String jobTitle = "";
     private String compName = "";
-    private String location = "";
     private String description = "";
-    private int salary;
+    private String publishDate = "";
 
     // Constructors
-    public Job(String jobTitle, String compName, String location, String description, int salary) {
+    public Job (int id, String jobTitle, String compName, String description, String publishDate) {
+        setId(id);
         setJobTitle(jobTitle);
         setCompName(compName);
-        setLocation(location);
         setDescription(description);
-        setSalary(salary);
+        setPublishDate(publishDate);
     }
 
     // methods
+    public int getId() {
+        return id;
+    }
+
+    public void setId (int id) {
+        this.id = id;
+    }
+
     public String getJobTitle() {
         return jobTitle;
     }
@@ -36,14 +44,6 @@ public class Job {
         this.compName = compName;
     }
 
-    public String getLocation() {
-        return location;
-    }
-
-    public void setLocation(String location) {
-        this.location = location;
-    }
-
     public String getDescription() {
         return description;
     }
@@ -52,18 +52,18 @@ public class Job {
         this.description = description;
     }
 
-    public int getSalary() {
-        return salary;
+    public String getPublishDate() {
+        return publishDate;
     }
 
-    public void setSalary(int salary) {
-        if (salary > -1) {
-            this.salary = salary;
-        }
-        else {
-            salary = 0;
-        }
+    public void setPublishDate(String publishDate) {
+        this.publishDate = publishDate;
     }
 
-
+    @Override
+    public String toString() {
+        String output = "Job ID: " + id + "\nJob Title: " + jobTitle + "\nCompany Name: " + compName;
+        output += "\nDescription: " + description + "\nPublish Date: " + publishDate;
+        return output;
+    }
 }
