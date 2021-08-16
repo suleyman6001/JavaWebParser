@@ -1,6 +1,7 @@
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.*;
 import org.jsoup.select.Elements;
+import java.sql.*;
 import java.util.*;
 
 public class JobSearchParser extends WebParser {
@@ -26,7 +27,7 @@ public class JobSearchParser extends WebParser {
 
         System.out.println();
         try {
-            final Document doc = Jsoup.connect(url).timeout(60000).get();
+            final Document doc = Jsoup.connect(url).timeout(200000).get();
             Document jobDocument;
 
             if (doc == null ) {
@@ -50,7 +51,7 @@ public class JobSearchParser extends WebParser {
             Elements jobDetails;
             for (int i = 0; i < urlList.size(); i++ ) {
                 jobUrl = urlList.get(i);
-                jobDocument = Jsoup.connect(jobUrl).timeout(60000).get();
+                jobDocument = Jsoup.connect(jobUrl).timeout(200000).get();
 
                 if (jobDocument == null) {
                     return null;
@@ -73,11 +74,90 @@ public class JobSearchParser extends WebParser {
                 jobList.add(job);
             }
         }
-
         catch (Exception e) {
             System.out.println("Error occurred while connecting to jobsearch.az");
             e.printStackTrace();
         }
+        addToDatabase(jobList);
         return jobList;
+    }
+
+    /**
+     * This method adds jobs in the list to the database
+     * @param jobs the job list
+     */
+    private void addToDatabase(List<Job> jobs) {
+        final String DB_URL = "jdbc:postgresql://localhost:5432/postgres";
+        final String USERNAME = "postgres";
+        final String PASSWORD = "showmustgoon";
+        int jobId;
+        String jobTitle;
+        String compName;
+        String description;
+        String publishDate;
+        Connection connection = null;
+        String sqlQuery = "";
+        PreparedStatement stmt = null;
+
+        // Connecting to the database
+        try {
+            connection = DriverManager.getConnection(DB_URL, USERNAME, PASSWORD);
+            if (connection != null)  {
+                System.out.println("Successfully connected to the database");
+            }
+        }
+        catch (SQLException e) {
+            System.out.println("Could not connect to the database. Please try again.");
+            return;
+        }
+
+        // inserting jobs to the database
+        try {
+            sqlQuery = "INSERT INTO Jobsearch_Job_Table VALUES(?, ?, ?, ?, ?)";
+            stmt = connection.prepareStatement(sqlQuery);
+            for (Job job : jobs) {
+                // inserting into jobsearch table
+                try {
+                    jobId = job.getId();
+                    jobTitle = job.getJobTitle();
+                    compName = job.getCompName();
+                    description = job.getDescription();
+                    publishDate = job.getPublishDate();
+
+                    stmt.setInt(1, jobId);
+                    stmt.setString(2, jobTitle);
+                    stmt.setString(3, compName);
+                    stmt.setString(4, description);
+                    stmt.setString(5, publishDate);
+                    stmt.executeUpdate();
+
+                    System.out.println("Insertion was successful");
+                }
+                catch (Exception e) {
+                    System.out.println("Duplicate insertion not allowed");
+                    e.printStackTrace();
+                }
+            }
+        }
+        catch (SQLException e) {
+            System.out.println("Query could not be executed");
+            e.printStackTrace();
+        }
+
+        // close the database connection
+        try {
+            if (stmt != null) {
+                stmt.close();
+                System.out.println("\nStatement closed successfully");
+            }
+
+            if (connection != null ) {
+                connection.close();
+                System.out.println("\nConnection closed successfully");
+            }
+        }
+        catch (SQLException e) {
+            System.out.println("\nConnection or Statement does not exist. It could not be closed");
+        }
     }
 }
