@@ -4,11 +4,14 @@ public class WebParserRunner {
         JobSearchParser jobSearchParser = new JobSearchParser();
 
         try {
-            cvParser.getJobs();
-            jobSearchParser.getJobs();
+            cvParser.addParsedJobsToDatabase();
+            cvParser.closeDatabaseConnection();
+
+            jobSearchParser.addParsedJobsToDatabase();
+            jobSearchParser.closeDatabaseConnection();
         }
         catch (Exception e) {
-            System.out.println("Error");
+            e.printStackTrace();
         }
     }
 }

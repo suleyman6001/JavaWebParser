@@ -1,69 +1,58 @@
-/**
- * This class holds the job details scraped from the website
- * Note: This class is not complete yet. Changes will be made.
- */
-public class Job {
-    // fields
-    private int id;
-    private String jobTitle = "";
-    private String compName = "";
-    private String description = "";
-    private String publishDate = "";
+import java.sql.Date;
 
-    // Constructors
-    public Job (int id, String jobTitle, String compName, String description, String publishDate) {
-        setId(id);
-        setJobTitle(jobTitle);
-        setCompName(compName);
-        setDescription(description);
-        setPublishDate(publishDate);
+public class Job {
+    private int siteId;
+    private int id;
+    private String jobTitle;
+    private String companyName;
+    private String description;
+    private Date publishDate;
+
+    public Job(int siteId, int id, String jobTitle, String companyName,
+               String description, Date publishDate) {
+        this.siteId = siteId;
+        this.id = id;
+        this.jobTitle = jobTitle;
+        this.companyName = companyName;
+        this.description = description;
+        this.publishDate = publishDate;
     }
 
-    // methods
+    public int getSiteId() {
+        return siteId;
+    }
+
     public int getId() {
         return id;
-    }
-
-    public void setId (int id) {
-        this.id = id;
     }
 
     public String getJobTitle() {
         return jobTitle;
     }
 
-    public void setJobTitle(String jobTitle) {
-        this.jobTitle = jobTitle;
-    }
-
-    public String getCompName() {
-        return compName;
-    }
-
-    public void setCompName(String compName) {
-        this.compName = compName;
+    public String getCompanyName() {
+        return companyName;
     }
 
     public String getDescription() {
         return description;
     }
 
-    public void setDescription(String description) {
-        this.description = description;
-    }
-
-    public String getPublishDate() {
+    public Date getPublishDate() {
         return publishDate;
-    }
-
-    public void setPublishDate(String publishDate) {
-        this.publishDate = publishDate;
     }
 
     @Override
     public String toString() {
-        String output = "Job ID: " + id + "\nJob Title: " + jobTitle + "\nCompany Name: " + compName;
-        output += "\nDescription: " + description + "\nPublish Date: " + publishDate;
+        String output = "Job ID: " + id + "\nJob Title: " + jobTitle + "\nCompany Name: " + companyName;
+        output += "\nDescription: " ;
+        if (description != null) {
+            output += description;
+        }
+        output += "\nPublish Date: ";
+        if (publishDate != null) {
+            output += publishDate.toString();
+        }
         return output;
     }
 }

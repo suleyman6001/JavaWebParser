@@ -1,30 +1,28 @@
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.*;
 import org.jsoup.select.Elements;
-
 import java.sql.*;
+import java.sql.Date;
 import java.util.*;
 
 public class CveeParser extends WebParser {
+    final static int SITE_ID = 1;
 
     public CveeParser() {
         url = "https://www.cv.ee/en/search?limit=20&offset=0&categories%5B0%5D" +
                 "=INFORMATION_TECHNOLOGY&isHourlySalary=false&isRemoteWork=false";
+        connector = new DatabaseConnector();
     }
 
-    @Override
-    /**
-     * This method returns all the jobs scraped from jobsearch.az
-     */
-    public List<Job> getJobs() throws Exception {
+    /*public List<Job> getJobs() throws Exception {
         int id;
-        String jobTitle = "";
-        String compName = "";
-        String description = "";
-        String publishDate = "";
-        String jobUrl = "";
-        ArrayList<String> urlList = new ArrayList<String>();
-        ArrayList<Job> jobList = new ArrayList<Job>();
+        String jobTitle;
+        String compName;
+        String description;
+        Date publishDate;
+        String jobUrl;
+        ArrayList<String> urlList = new ArrayList<>();
+        ArrayList<Job> jobList = new ArrayList<>();
         int num = 1;
 
         System.out.println();
@@ -33,9 +31,6 @@ public class CveeParser extends WebParser {
             final Document doc = Jsoup.connect(url).timeout(200000).get();
             Document jobDocument;
 
-            if (doc == null ) {
-                return null;
-            }
             Elements elems = doc.select("a.jsx-1471379408.vacancy-item__logo.hide-mobile");
 
             // Foreach loop to iterate through every IT job listed to scrape the job urls
@@ -51,25 +46,20 @@ public class CveeParser extends WebParser {
             }
 
             // Now we scrape individual job details
-            for (int i = 0; i < urlList.size(); i++ ) {
-                jobUrl = urlList.get(i);
-                jobDocument = Jsoup.connect(jobUrl).timeout(200000).get();
-
-                if (jobDocument == null) {
-                    return null;
-                }
+            for (String curUrl:urlList ) {
+                jobDocument = Jsoup.connect(curUrl).timeout(200000).get();
 
                 // scraping the necessary data
                 jobTitle = jobDocument.select("div.jsx-1778450779.vacancy-content-mobile-header__position").
                                         text();
                 compName = jobDocument.select("span.jsx-1778450779.vacancy-content-header__employer").text();
-                jobUrl = jobUrl.replace(jobTitle, "").replace(compName, "");
-                id = Integer.parseInt(jobUrl.replaceAll("[^0-9]",""));
+                curUrl = curUrl.replace(jobTitle, "").replace(compName, "");
+                id = Integer.parseInt(curUrl.replaceAll("[^0-9]",""));
                 description = "";
-                publishDate = "";
+                publishDate = null;
 
                 // Creating a job object with necessary info and adding it to the job list
-                Job job = new Job(id, jobTitle, compName, description, publishDate);
+                Job job = new Job(SITE_ID, id, jobTitle, compName, description, publishDate);
                 System.out.println(num);
                 System.out.println(job);
                 System.out.println();
@@ -83,23 +73,19 @@ public class CveeParser extends WebParser {
         }
         addToDatabase(jobList);
         return jobList;
-    }
+    }*/
 
-    /**
-     * This method adds jobs in the list to the database
-     * @param jobs the job list
-     */
-    private void addToDatabase(List<Job> jobs) {
+    /*private void addToDatabase(List<Job> jobs) {
         final String DB_URL = "jdbc:postgresql://localhost:5432/postgres";
         final String USERNAME = "postgres";
         final String PASSWORD = "showmustgoon";
         int jobId;
         String jobTitle;
-        String compName;
+        String companyName;
         String description;
-        String publishDate;
-        Connection connection = null;
-        String sqlQuery = "";
+        Date publishDate;
+        Connection connection;
+        String sqlQuery;
         PreparedStatement stmt = null;
 
         // Connecting to the database
@@ -116,24 +102,29 @@ public class CveeParser extends WebParser {
 
         // inserting jobs to the database
         try {
-            sqlQuery = "INSERT INTO Cvee_Job_Table VALUES(?, ?, ?, ?, ?)";
-            stmt = connection.prepareStatement(sqlQuery);
+            sqlQuery = "INSERT INTO Cvee_Job_Table VALUES(DEFAULT, ?, ?, ?, ?, ?, ?)";
+            if (connection != null) {
+                stmt = connection.prepareStatement(sqlQuery);
+            }
+
             for (Job job : jobs) {
                 // inserting into cv.ee table
                 try {
                     jobId = job.getId();
                     jobTitle = job.getJobTitle();
-                    compName = job.getCompName();
+                    companyName = job.getCompanyName();
                     description = job.getDescription();
                     publishDate = job.getPublishDate();
 
-                    stmt.setInt(1, jobId);
-                    stmt.setString(2, jobTitle);
-                    stmt.setString(3, compName);
-                    stmt.setString(4, description);
-                    stmt.setString(5, publishDate);
-                    stmt.executeUpdate();
-
+                    if (stmt != null) {
+                        stmt.setInt(1, SITE_ID);
+                        stmt.setInt(2, jobId);
+                        stmt.setString(3, jobTitle);
+                        stmt.setString(4, companyName);
+                        stmt.setString(5, description);
+                        stmt.setDate(6, publishDate);
+                        stmt.executeUpdate();
+                    }
                     System.out.println("Insertion was successful");
                 }
                 catch (Exception e) {
@@ -161,5 +152,82 @@ public class CveeParser extends WebParser {
         catch (SQLException e) {
             System.out.println("\nConnection or Statement does not exist. It could not be closed");
         }
+    }*/
+
+    @Override
+    public List<String> getJobUrls() {
+        String jobUrl;
+        ArrayList<String> urlList = new ArrayList<>();
+
+        System.out.println();
+        try {
+            url = url.replace("limit=20", "limit=10000");
+            final Document doc = Jsoup.connect(url).timeout(200000).get();
+
+            Elements elems = doc.select("a.jsx-1471379408.vacancy-item__logo.hide-mobile");
+
+            // Foreach loop to iterate through every IT job listed to scrape the job urls
+            for (Element elem : elems) {
+                if (elem != null) {
+                    jobUrl = elem.attr("abs:href");
+
+                    if (jobUrl.equals("")) {
+                        continue;
+                    }
+                    urlList.add(jobUrl);
+                }
+            }
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+        return urlList;
+    }
+
+    @Override
+    public List<Job> addParsedJobsToDatabase() throws Exception {
+        Document jobDocument = null;
+        int id;
+        int num = 1;
+        String jobTitle;
+        String compName;
+        String description;
+        Date publishDate;
+        List<Job> jobList = new ArrayList<>();
+        List<String> urlList = getJobUrls();
+
+        try {
+            for (String curUrl:urlList ) {
+                jobDocument = Jsoup.connect(curUrl).timeout(200000).get();
+
+                // scraping the necessary data
+                jobTitle = jobDocument.select("div.jsx-1778450779.vacancy-content-mobile-header__position").
+                                        text();
+                compName = jobDocument.select("span.jsx-1778450779.vacancy-content-header__employer").text();
+                curUrl = curUrl.replace(jobTitle, "").replace(compName, "");
+                id = Integer.parseInt(curUrl.replaceAll("[^0-9]",""));
+                description = null;
+                publishDate = null;
+
+                // Creating a job object with necessary info and adding it to the job list
+                Job job = new Job(SITE_ID, id, jobTitle, compName, description, publishDate);
+                System.out.println(num);
+                System.out.println(job);
+                System.out.println();
+                num++;
+                connector.insertJob(job);
+                jobList.add(job);
+            }
+        }
+        catch (Exception e) {
+            System.out.println("Error occurred while connecting to cv.ee/en");
+            e.printStackTrace();
+        }
+        return jobList;
+    }
+
+    @Override
+    public void closeDatabaseConnection() {
+        connector.closeResources();
     }
 }
