@@ -63,7 +63,7 @@ public class DatabaseConnector {
      */
     private boolean hasDuplicate(Job job) {
         PreparedStatement stmt = null;
-        ResultSet queryResults = null;
+        ResultSet queryResults;
         try {
             String selectQuery = "SELECT * FROM job_table WHERE job_id = ? AND site_id = ?;";
             stmt = connection.prepareStatement(selectQuery);
@@ -104,14 +104,14 @@ public class DatabaseConnector {
                 statement.close();
                 System.out.println("Successfully closed statement");
             }
-            catch (SQLException e) {}
+            catch (SQLException e) { e.printStackTrace(); }
             finally {
                 try {
                     if (!statement.isClosed()) {
                         statement.close();
                     }
                 }
-                catch (Exception e) {}
+                catch (Exception e) { e.printStackTrace(); }
             }
         }
 
@@ -121,14 +121,14 @@ public class DatabaseConnector {
                 connection.close();
                 System.out.println("Successfully closed connection");
             }
-            catch (SQLException e) {}
+            catch (SQLException e) { e.printStackTrace(); }
             finally {
                 try {
                     if (!connection.isClosed()) {
                         connection.close();
                     }
                 }
-                catch (Exception e) {}
+                catch (Exception e) { e.printStackTrace(); }
             }
         }
     }
