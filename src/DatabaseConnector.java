@@ -5,17 +5,8 @@ public class DatabaseConnector {
     private final String DB_URL = "jdbc:postgresql://localhost:5432/postgres";
     private final String USERNAME = "postgres";
     private final String PASSWORD = "showmustgoon";
-    private Connection connection;
-    private PreparedStatement statement;
 
-    public DatabaseConnector() {
-        try {
-            connection = DriverManager.getConnection(DB_URL, USERNAME, PASSWORD);
-        }
-        catch (Exception e) {
-            System.out.println("Connection could not be established");
-        }
-    }
+    public DatabaseConnector() {}
 
     /**
      * This method inserts a given job to the database
@@ -23,21 +14,30 @@ public class DatabaseConnector {
      * @return true if insertion is successful, false otherwise
      */
     public boolean insertJob(Job job) {
-        String insertQuery = "INSERT INTO job_table VALUES(DEFAULT, ?, ?, ?, ?, ?, ?);";
+        String insertQuery = "INSERT INTO job VALUES(DEFAULT, ?, ?, ?, ?, ?, ?);";
         boolean isSuccessful = false;
+        Date publishDate = null;
+        Connection connection = null;
+        PreparedStatement statement = null;
 
         if (!hasDuplicate(job)) {
             try {
+                connection = DriverManager.getConnection(DB_URL, USERNAME, PASSWORD);
                 statement = connection.prepareStatement(insertQuery);
+
                 int jobId = job.getId();
                 String jobTitle = job.getJobTitle();
                 String companyName = job.getCompanyName();
                 String description = job.getDescription();
-                Date publishDate = job.getPublishDate();
+                java.util.Date date = job.getPublishDate();
+
+                if (date != null) {
+                    publishDate = new Date(date.getTime());
+                }
 
                 if (statement != null) {
                     statement.setInt(1, jobId );
-                    statement.setInt(2, job.getSiteId());
+                    statement.setString(2, job.getSiteName());
                     statement.setString(3, jobTitle);
                     statement.setString(4, companyName);
                     statement.setString(5, description);
@@ -45,12 +45,34 @@ public class DatabaseConnector {
                     statement.executeUpdate();
                     isSuccessful = true;
                 }
-
             }
             catch (SQLException e) {
                 System.out.println("Exception occurred while insertJob() method");
                 e.printStackTrace();
                 isSuccessful = false;
+            }
+            finally {
+                // closing the statement
+                try {
+                    if (statement != null) {
+                        statement.close();
+                    }
+                }
+                catch (Exception e) {
+                    System.out.println("Could not close the statement");
+                    e.printStackTrace();
+                }
+
+                // closing the connection
+                try {
+                    if (connection != null) {
+                        connection.close();
+                    }
+                }
+                catch (Exception e) {
+                    System.out.println("Could not close the connection");
+                    e.printStackTrace();
+                }
             }
         }
         return isSuccessful;
@@ -62,12 +84,21 @@ public class DatabaseConnector {
      * @return true if the job is present in the database and false otherwise
      */
     private boolean hasDuplicate(Job job) {
+        Connection connection = null;
         PreparedStatement stmt = null;
         ResultSet queryResults;
+
         try {
-            String selectQuery = "SELECT * FROM job_table WHERE job_id = ? AND site_id = ?;";
+            connection = DriverManager.getConnection(DB_URL, USERNAME, PASSWORD);
+        }
+        catch (Exception e) {
+            System.out.println("Connection could not be opened");
+            e.printStackTrace();
+        }
+        try {
+            String selectQuery = "SELECT * FROM job WHERE site_name = ? AND job_id = ?;";
             stmt = connection.prepareStatement(selectQuery);
-            stmt.setInt(1, job.getSiteId());
+            stmt.setString(1, job.getSiteName());
             stmt.setInt(2, job.getId());
             queryResults = stmt.executeQuery();
 
@@ -77,59 +108,35 @@ public class DatabaseConnector {
                 return true;
             }
         }
+
         catch (Exception e) {
             System.out.println("Exception occurred");
+            e.printStackTrace();
         }
+
         finally {
+            // closing the statement
             try {
                 if (stmt != null) {
                     stmt.close();
                 }
             }
             catch (Exception e) {
-                System.out.println("Exception occurred in hasDuplicate() method");
+                System.out.println("Could not close the statement");
+                e.printStackTrace();
+            }
+
+            // closing the connection
+            try {
+                if (connection != null) {
+                    connection.close();
+                }
+            }
+            catch (Exception e) {
+                System.out.println("Could not close the connection");
                 e.printStackTrace();
             }
         }
         return false;
-    }
-
-    /**
-     * This method closes database resources
-     */
-    public void closeResources() {
-        // closing the statement
-        if (statement != null) {
-            try {
-                statement.close();
-                System.out.println("Successfully closed statement");
-            }
-            catch (SQLException e) { e.printStackTrace(); }
-            finally {
-                try {
-                    if (!statement.isClosed()) {
-                        statement.close();
-                    }
-                }
-                catch (Exception e) { e.printStackTrace(); }
-            }
-        }
-
-        // closing the connection
-        if (connection != null) {
-            try {
-                connection.close();
-                System.out.println("Successfully closed connection");
-            }
-            catch (SQLException e) { e.printStackTrace(); }
-            finally {
-                try {
-                    if (!connection.isClosed()) {
-                        connection.close();
-                    }
-                }
-                catch (Exception e) { e.printStackTrace(); }
-            }
-        }
     }
 }

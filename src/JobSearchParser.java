@@ -6,13 +6,12 @@ import java.util.*;
 
 public class JobSearchParser extends WebParser {
 
-    final static int SITE_ID = 2;
+    private final static String SITE_NAME = Job.SITE_NAMES.jobsearch.name();
 
     public JobSearchParser() {
         url = "https://www.jobsearch.az/";
         connector = new DatabaseConnector();
     }
-
 
     @Override
     public List<String> getJobUrls() {
@@ -68,9 +67,10 @@ public class JobSearchParser extends WebParser {
                 compName = jobDetails.get(1).text().replace("EMPLOYER: ", "");
                 description = jobDetails.get(6).text().replace("EMPLOYER: ", "");
                 publishDate = Date.valueOf(jobDetails.get(3).text().replace("PUBLISHED: ", ""));
+                java.util.Date date = new java.util.Date(publishDate.getTime());
 
                 // Creating a job object with necessary info and adding it to the job list
-                Job job = new Job(SITE_ID, id, jobTitle, compName, description, publishDate);
+                Job job = new Job(SITE_NAME, id, jobTitle, compName, description, date);
                 System.out.println(num);
                 System.out.println(job);
                 System.out.println();
@@ -84,10 +84,5 @@ public class JobSearchParser extends WebParser {
             e.printStackTrace();
         }
         return jobList;
-    }
-
-    @Override
-    public void closeDatabaseConnection() {
-        connector.closeResources();
     }
 }

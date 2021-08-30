@@ -6,5 +6,4 @@ public abstract class WebParser {
 
     public abstract List<String> getJobUrls();
     public abstract List<Job> addParsedJobsToDatabase() throws Exception;
-    public abstract void closeDatabaseConnection();
 }

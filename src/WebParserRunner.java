@@ -5,10 +5,7 @@ public class WebParserRunner {
 
         try {
             cvParser.addParsedJobsToDatabase();
-            cvParser.closeDatabaseConnection();
-
             jobSearchParser.addParsedJobsToDatabase();
-            jobSearchParser.closeDatabaseConnection();
         }
         catch (Exception e) {
             e.printStackTrace();

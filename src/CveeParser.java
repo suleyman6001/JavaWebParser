@@ -5,7 +5,7 @@ import java.sql.Date;
 import java.util.*;
 
 public class CveeParser extends WebParser {
-    final static int SITE_ID = 1;
+    private final static String SITE_NAME = Job.SITE_NAMES.cvee.name();
 
     public CveeParser() {
         url = "https://www.cv.ee/en/search?limit=20&offset=0&categories%5B0%5D" +
@@ -69,7 +69,7 @@ public class CveeParser extends WebParser {
                 publishDate = null;
 
                 // Creating a job object with necessary info and adding it to the job list
-                Job job = new Job(SITE_ID, id, jobTitle, compName, description, publishDate);
+                Job job = new Job(SITE_NAME, id, jobTitle, compName, description, publishDate);
                 System.out.println(num);
                 System.out.println(job);
                 System.out.println();
@@ -83,10 +83,5 @@ public class CveeParser extends WebParser {
             e.printStackTrace();
         }
         return jobList;
-    }
-
-    @Override
-    public void closeDatabaseConnection() {
-        connector.closeResources();
     }
 }
