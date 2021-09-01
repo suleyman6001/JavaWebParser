@@ -1,4 +1,5 @@
 public class Job {
+
     enum SITE_NAMES {
         jobsearch, cvee
     }

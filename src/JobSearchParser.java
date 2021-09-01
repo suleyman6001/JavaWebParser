@@ -54,11 +54,10 @@ public class JobSearchParser extends WebParser {
         List<Job> jobList = new ArrayList<>();
         List<String> urlList = getJobUrls();
 
-        try {
-            Elements jobDetails;
-            for (String curUrl:urlList ) {
+        Elements jobDetails;
+        for (String curUrl:urlList ) {
+            try {
                 jobDocument = Jsoup.connect(curUrl).timeout(200000).get();
-
                 jobDetails = jobDocument.select("td.text");
 
                 // scraping the necessary data
@@ -78,10 +77,10 @@ public class JobSearchParser extends WebParser {
                 connector.insertJob(job);
                 jobList.add(job);
             }
-        }
-        catch (Exception e) {
-            System.out.println("Error occurred while connecting to jobsearch.az");
-            e.printStackTrace();
+            catch (Exception e) {
+                //System.out.println("Error occurred while connecting to jobsearch.az");
+                //e.printStackTrace();
+            }
         }
         return jobList;
     }

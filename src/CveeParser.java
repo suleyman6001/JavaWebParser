@@ -55,16 +55,17 @@ public class CveeParser extends WebParser {
         List<Job> jobList = new ArrayList<>();
         List<String> urlList = getJobUrls();
 
-        try {
-            for (String curUrl:urlList ) {
+
+        for (String curUrl:urlList ) {
+            try {
                 jobDocument = Jsoup.connect(curUrl).timeout(200000).get();
 
                 // scraping the necessary data
                 jobTitle = jobDocument.select("div.jsx-1778450779.vacancy-content-mobile-header__position").
-                                        text();
+                        text();
                 compName = jobDocument.select("span.jsx-1778450779.vacancy-content-header__employer").text();
                 curUrl = curUrl.replace(jobTitle, "").replace(compName, "");
-                id = Integer.parseInt(curUrl.replaceAll("[^0-9]",""));
+                id = Integer.parseInt(curUrl.replaceAll("[^0-9]", ""));
                 description = null;
                 publishDate = null;
 
@@ -77,10 +78,10 @@ public class CveeParser extends WebParser {
                 connector.insertJob(job);
                 jobList.add(job);
             }
-        }
-        catch (Exception e) {
-            System.out.println("Error occurred while connecting to cv.ee/en");
-            e.printStackTrace();
+            catch (Exception e) {
+                //System.out.println("Error occurred while parsing the job in cv.ee/en");
+                //e.printStackTrace();
+            }
         }
         return jobList;
     }
